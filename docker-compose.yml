@@ -1,0 +1,20 @@
+services:
+  monitor:
+    # 镜像名称通过环境变量传入
+    # 本地测试：IMAGE_NAME=apple-refurb-monitor:latest docker compose up -d
+    # GitHub Actions 自动部署时会设置为：ghcr.io/用户名/apple-refurb-monitor:latest
+    image: ${IMAGE_NAME:-apple-refurb-monitor:latest}
+    container_name: apple-refurb-monitor
+    restart: always
+    env_file:
+      - .env
+    environment:
+      # 容器内使用 /app/data/state.json，避免挂载单文件时宿主机文件不存在导致创建目录
+      - LOCAL_STATE_PATH=/app/data/state.json
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    working_dir: /app
+    command: ["node", "server.js"]

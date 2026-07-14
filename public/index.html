@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple 官翻 Mac 监控配置</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f6f7;
+      color: #333;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 32px;
+    }
+    h1 { margin-top: 0; font-size: 24px; }
+    .subtitle { color: #666; margin-bottom: 24px; }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1677ff;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+    .hint {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 28px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .actions {
+      margin-top: 28px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    .btn-primary { background: #1677ff; color: #fff; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .status {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .status.success { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+    .status.error { background: #fff2f0; color: #cf1322; border: 1px solid #ffccc7; }
+    .status.info { background: #e6f4ff; color: #0958d9; border: 1px solid #91caff; }
+    .hidden { display: none; }
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: normal;
+      cursor: pointer;
+      background: #f5f6f7;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    .lock-banner {
+      background: #e6f4ff;
+      border: 1px solid #91caff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .lock-banner label { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍎 Apple 官翻 Mac 监控配置</h1>
+    <p class="subtitle">部署后只需在网页端修改配置，保存时需要输入部署密钥。</p>
+
+    <div class="lock-banner">
+      <label for="adminSecret">部署密钥（ADMIN_SECRET）</label>
+      <input type="password" id="adminSecret" placeholder="请输入部署时设置的密钥">
+      <p class="hint">该密钥仅在保存时用于校验，不会存储到浏览器。</p>
+    </div>
+
+    <form id="configForm">
+      <div class="section-title">监控设置</div>
+
+      <div class="form-group">
+        <label>监控机型</label>
+        <div id="watchModelsGroup" class="checkbox-group">
+          <!-- 由 JS 根据可用机型动态生成 -->
+        </div>
+        <p class="hint">勾选需要监控的机型</p>
+      </div>
+
+      <div class="form-group">
+        <label for="APPLE_REFURB_URL">Apple 官翻页面 URL</label>
+        <input type="text" id="APPLE_REFURB_URL" name="APPLE_REFURB_URL">
+      </div>
+
+      <div class="form-group">
+        <label for="FETCH_TIMEOUT">HTTP 请求超时（毫秒）</label>
+        <input type="number" id="FETCH_TIMEOUT" name="FETCH_TIMEOUT">
+      </div>
+
+      <div class="form-group">
+        <label for="CHECK_INTERVAL_MS">检查间隔（毫秒）</label>
+        <input type="number" id="CHECK_INTERVAL_MS" name="CHECK_INTERVAL_MS">
+        <p class="hint">默认 300000 毫秒 = 5 分钟</p>
+      </div>
+
+      <div class="form-group">
+        <label for="REMINDER_REPEAT_COUNT">连续提醒次数</label>
+        <input type="number" id="REMINDER_REPEAT_COUNT" name="REMINDER_REPEAT_COUNT" min="1">
+        <p class="hint">同一机型上架后连续提醒几次，默认 1（仅提醒一次）</p>
+      </div>
+
+      <div class="section-title">状态持久化</div>
+
+      <p class="hint">飞书机器人配置（Webhook / Secret）请在服务端 .env 文件中设置，网页端不显示。</p>
+
+      <div class="form-group">
+        <label for="STATE_BACKEND">状态后端</label>
+        <select id="STATE_BACKEND" name="STATE_BACKEND">
+          <option value="local">本地文件（推荐 ECS/本地）</option>
+          <option value="cos">腾讯云 COS（仅 SCF）</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="localStateGroup">
+        <label for="LOCAL_STATE_PATH">本地状态文件路径</label>
+        <input type="text" id="LOCAL_STATE_PATH" name="LOCAL_STATE_PATH">
+      </div>
+
+      <div id="cosGroup" class="hidden">
+        <div class="form-group">
+          <label for="COS_SECRET_ID">COS SecretId</label>
+          <input type="text" id="COS_SECRET_ID" name="COS_SECRET_ID">
+        </div>
+        <div class="form-group">
+          <label for="COS_SECRET_KEY">COS SecretKey</label>
+          <input type="password" id="COS_SECRET_KEY" name="COS_SECRET_KEY">
+        </div>
+        <div class="form-group">
+          <label for="COS_BUCKET">COS 存储桶名</label>
+          <input type="text" id="COS_BUCKET" name="COS_BUCKET">
+        </div>
+        <div class="form-group">
+          <label for="COS_REGION">COS 地域</label>
+          <input type="text" id="COS_REGION" name="COS_REGION">
+        </div>
+        <div class="form-group">
+          <label for="COS_STATE_KEY">COS 状态文件路径</label>
+          <input type="text" id="COS_STATE_KEY" name="COS_STATE_KEY">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary">保存配置</button>
+        <button type="button" class="btn-secondary" id="btnRun">立即检查一次</button>
+      </div>
+    </form>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    // 后端 API 基础地址
+    // 本地或同域部署时保持空字符串；前后端分离部署时改为后端地址，例如：
+    // const API_BASE_URL = 'https://your-ecs-domain.com';
+    const API_BASE_URL = '';
+
+    const fields = [
+      'APPLE_REFURB_URL', 'FETCH_TIMEOUT', 'CHECK_INTERVAL_MS', 'REMINDER_REPEAT_COUNT',
+      'STATE_BACKEND', 'LOCAL_STATE_PATH',
+      'COS_SECRET_ID', 'COS_SECRET_KEY', 'COS_BUCKET', 'COS_REGION', 'COS_STATE_KEY'
+    ];
+
+    const stateBackendEl = document.getElementById('STATE_BACKEND');
+    const cosGroup = document.getElementById('cosGroup');
+    const localStateGroup = document.getElementById('localStateGroup');
+
+    function updateBackendVisibility() {
+      if (stateBackendEl.value === 'cos') {
+        cosGroup.classList.remove('hidden');
+        localStateGroup.classList.add('hidden');
+      } else {
+        cosGroup.classList.add('hidden');
+        localStateGroup.classList.remove('hidden');
+      }
+    }
+    stateBackendEl.addEventListener('change', updateBackendVisibility);
+
+    function renderWatchModels(availableModels, selected) {
+      const container = document.getElementById('watchModelsGroup');
+      container.innerHTML = '';
+      const selectedSet = new Set((selected || '').split(',').map(s => s.trim()).filter(Boolean));
+      Object.entries(availableModels || {}).forEach(([key, label]) => {
+        const labelEl = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.name = 'WATCH_MODELS';
+        cb.value = key;
+        cb.checked = selectedSet.has(key);
+        labelEl.appendChild(cb);
+        labelEl.appendChild(document.createTextNode(label));
+        container.appendChild(labelEl);
+      });
+    }
+
+    async function loadConfig() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/config`);
+        if (!res.ok) throw new Error('加载配置失败');
+        const data = await res.json();
+        renderWatchModels(data.availableModels, data.WATCH_MODELS);
+        fields.forEach(key => {
+          const el = document.getElementById(key);
+          if (el && data[key] !== undefined) el.value = data[key];
+        });
+        updateBackendVisibility();
+        showStatus('配置已加载', 'info');
+      } catch (e) {
+        showStatus(e.message, 'error');
+      }
+    }
+
+    function collectConfig() {
+      const data = {};
+      fields.forEach(key => {
+        const el = document.getElementById(key);
+        if (el) data[key] = el.value.trim();
+      });
+      data.WATCH_MODELS = Array.from(document.querySelectorAll('input[name="WATCH_MODELS"]:checked'))
+        .map(cb => cb.value)
+        .join(',');
+      return data;
+    }
+
+    function getAdminSecret() {
+      return document.getElementById('adminSecret').value.trim();
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + type;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    document.getElementById('configForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const secret = getAdminSecret();
+      if (!secret) {
+        showStatus('请输入部署密钥', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/config`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Secret': secret
+          },
+          body: JSON.stringify(collectConfig())
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || '保存失败');
+        showStatus('配置保存成功', 'success');
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    });
+
+    document.getElementById('btnRun').addEventListener('click', async () => {
+      const secret = getAdminSecret();
+      if (!secret) {
+        showStatus('请输入部署密钥', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/run`, {
+          method: 'POST',
+          headers: { 'X-Admin-Secret': secret }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || '触发失败');
+        showStatus('检查已触发，请查看日志', 'success');
+      } catch (err) {
+        showStatus(err.message, 'error');
+      }
+    });
+
+    loadConfig();
+  </script>
+</body>
+</html>

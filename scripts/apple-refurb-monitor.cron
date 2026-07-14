@@ -1,0 +1,7 @@
+# Apple 官翻 Mac 监控 —— crontab 示例
+# 使用方式：
+#   1. 把下面一行里的 /opt/apple-refurb-monitor 改成实际项目路径
+#   2. 把 /usr/bin/node 改成 ECS 上 `which node` 返回的实际路径
+#   3. 执行 crontab scripts/apple-refurb-monitor.cron
+
+*/5 * * * * cd /opt/apple-refurb-monitor && /usr/bin/node index.js >> /opt/apple-refurb-monitor/logs/monitor.log 2>&1

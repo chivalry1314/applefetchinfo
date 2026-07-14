@@ -1,0 +1,37 @@
+# 使用已有 SSL 证书 + Nginx 反向代理
+#
+# 适用场景：
+#   - 你已经有 fullchain.pem / privkey.pem
+#   - 不想用 Cloudflare，也不想用 Let's Encrypt 自动申请
+#
+# 用法：
+#   1. 把证书放到 ./certs/fullchain.pem 和 ./certs/privkey.pem
+#   2. docker compose -f docker-compose.nginx-manual.yml up -d
+
+services:
+  monitor:
+    image: ${IMAGE_NAME:-apple-refurb-monitor:latest}
+    container_name: apple-refurb-monitor
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - LOCAL_STATE_PATH=/app/data/state.json
+    expose:
+      - "${PORT:-3000}"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-manual
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+      - ./nginx.manual.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - monitor

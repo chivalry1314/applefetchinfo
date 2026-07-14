@@ -1,0 +1,58 @@
+# Nginx 反向代理 + Let's Encrypt 自动 HTTPS
+#
+# 用法：
+#   1. 确保有一个已解析到 ECS IP 的域名
+#   2. 在 .env 中设置 DOMAIN=your-domain.com 和 LETSENCRYPT_EMAIL=your-email@example.com
+#   3. docker compose -f docker-compose.nginx.yml up -d
+#
+# 首次启动后，acme-companion 会自动申请证书，通常 1-2 分钟内完成。
+
+services:
+  monitor:
+    image: ${IMAGE_NAME:-apple-refurb-monitor:latest}
+    container_name: apple-refurb-monitor
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - LOCAL_STATE_PATH=/app/data/state.json
+      - VIRTUAL_HOST=${DOMAIN}
+      - VIRTUAL_PORT=${PORT:-3000}
+      - LETSENCRYPT_HOST=${DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    expose:
+      - "${PORT:-3000}"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  nginx:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+    environment:
+      - DEFAULT_HOST=${DOMAIN}
+
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-acme
+    restart: always
+    depends_on:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+      - ./vhost.d:/etc/nginx/vhost.d
+      - ./html:/usr/share/nginx/html
+      - ./acme:/etc/acme.sh
+    environment:
+      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+      - NGINX_PROXY_CONTAINER=nginx-proxy

@@ -1,0 +1,16 @@
+[Unit]
+Description=Apple Refurb Mac Monitor
+After=network.target
+
+[Service]
+Type=simple
+# 注意：使用 install.sh 会自动生成正确的路径和 node 位置
+WorkingDirectory=/opt/apple-refurb-monitor
+ExecStart=/usr/bin/node /opt/apple-refurb-monitor/server.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/apple-refurb-monitor/logs/server.log
+StandardError=append:/opt/apple-refurb-monitor/logs/server.log
+
+[Install]
+WantedBy=multi-user.target

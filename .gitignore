@@ -1,0 +1,11 @@
+node_modules/
+state.json
+.env
+logs/
+data/
+certs/
+vhost.d/
+html/
+acme/
+*.zip
+.workbuddy/

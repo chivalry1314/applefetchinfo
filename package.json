@@ -1,0 +1,19 @@
+{
+  "name": "apple-refurb-monitor",
+  "version": "1.0.0",
+  "description": "监控 Apple 中国官翻 Mac 页面，当 Mac mini / Mac Studio / Mac Pro 上架时发送飞书通知",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "node server.js",
+    "test": "node index.js --dry-run"
+  },
+  "dependencies": {
+    "cos-nodejs-sdk-v5": "^2.14.4",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

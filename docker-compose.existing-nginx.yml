@@ -1,0 +1,30 @@
+# 在已有 Nginx（Docker）服务器上部署 monitor
+#
+# 用法：
+#   1. 找到现有 Nginx 容器所在的 Docker 网络名
+#      docker network ls
+#   2. 设置 EXTERNAL_NETWORK 为你的网络名
+#      export EXTERNAL_NETWORK=share_default
+#   3. docker compose -f docker-compose.existing-nginx.yml up -d
+
+services:
+  monitor:
+    image: ${IMAGE_NAME:-apple-refurb-monitor:latest}
+    container_name: apple-refurb-monitor
+    restart: always
+    env_file: [ .env ]
+    environment:
+      - LOCAL_STATE_PATH=/app/data/state.json
+      - PORT=${PORT:-3001}
+    expose:
+      - "${PORT:-3001}"
+    networks:
+      - existing
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+networks:
+  existing:
+    external: true
+    name: ${EXTERNAL_NETWORK:?请设置环境变量 EXTERNAL_NETWORK，例如 share_default}
